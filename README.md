@@ -1,3 +1,5 @@
+<img src="https://github.com/speedogre/Anima-LoRA-Factory/blob/main/image.png">
+
 # Anima LoRA Factory 🚀
 Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を、プログラミングの知識なしで誰でも簡単に行えるように設計された GUI ツールです。 特に最新の NVIDIA RTX 50シリーズ (Blackwell / sm_120) への対応や、複雑な環境構築の自動化にこだわっています。
 
