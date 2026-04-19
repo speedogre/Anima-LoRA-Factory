@@ -17,7 +17,7 @@
                 Created by <a href="https://fukachan.jp/" target="_blank"
                     style="color: var(--accent-blue); text-decoration: none; font-weight: 600;">fukachan.jp</a>
             </p>
-            <p style="font-size: 0.75rem; color: var(--text-secondary);">v1.0 beta</p>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">v1.1 beta</p>
         </div>
 
         <nav>
@@ -310,7 +310,7 @@
                     </div>
                 </div>
 
-                
+
                 <div class="form-group">
                     <label>VRAM節約モード / VRAM Optimization</label>
                     <select id="vram-mode">
@@ -325,19 +325,24 @@
                     (Balanced is usually fine. If you get errors, try Low VRAM mode.)
                 </div>
 
-                <div class="form-group" style="margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem;">
-                        <input type="checkbox" id="enable-advanced" style="width: auto; margin: 0;" onchange="toggleAdvancedSettings()">
+                <div class="form-group"
+                    style="margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                    <label
+                        style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem;">
+                        <input type="checkbox" id="enable-advanced" style="width: auto; margin: 0;"
+                            onchange="toggleAdvancedSettings()">
                         <span>上級設定（意味がわからない場合は変更しないでください） / Advanced Settings</span>
                     </label>
-                    <div id="advanced-settings-container" style="display: none; margin-top: 1rem; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--glass-border);">
+                    <div id="advanced-settings-container"
+                        style="display: none; margin-top: 1rem; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--glass-border);">
                         <div style="flex: 1;">
                             <label style="font-size: 0.8rem;">ランク (network_dim)</label>
                             <input type="number" id="lora-rank" value="4" min="1" max="128" style="margin-top: 0.3rem;">
                         </div>
                         <div style="flex: 1;">
                             <label style="font-size: 0.8rem;">アルファ (network_alpha)</label>
-                            <input type="number" id="lora-alpha" value="1" min="1" max="128" style="margin-top: 0.3rem;">
+                            <input type="number" id="lora-alpha" value="1" min="1" max="128"
+                                style="margin-top: 0.3rem;">
                         </div>
                     </div>
                 </div>
