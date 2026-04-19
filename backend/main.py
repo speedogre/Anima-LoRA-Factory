@@ -406,8 +406,17 @@ async def get_image(path: str):
         raise HTTPException(status_code=404)
     return FileResponse(path)
 
+class TaggerConfig(BaseModel):
+    path: str
+    model: str = ""
+    output_dir: str = ""
+    name: str = ""
+    vram: str = ""
+    epochs: int = 1
+    lr: str = ""
+
 @app.post("/api/run-tagger")
-async def run_tagger(config: TrainingConfig):
+async def run_tagger(config: TaggerConfig):
     global tagging_logs
     
     tagger_script = os.path.join(os.path.dirname(__file__), "bundled_tagger.py")

@@ -302,7 +302,7 @@ async function batchRemoveTags() {
 }
 
 async function runAutoTagging() {
-    const btn = event.target;
+    const btn = document.getElementById('run-tagger-btn');
     const path = document.getElementById('dataset-path').value;
     
     if (!path) {
@@ -310,8 +310,10 @@ async function runAutoTagging() {
         return;
     }
 
-    btn.disabled = true;
-    btn.innerText = 'タグ付け実行中... / Tagging...';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'タグ付け実行中... / Tagging...';
+    }
     
     // Show progress bar
     const progressContainer = document.getElementById('tagger-progress-container');
@@ -331,6 +333,7 @@ async function runAutoTagging() {
             body: JSON.stringify({ 
                 path: path, 
                 model: document.getElementById('model-path').value || '',
+                output_dir: '',
                 name: 'tagger_job',
                 vram: 'balanced',
                 epochs: 1,
@@ -342,14 +345,19 @@ async function runAutoTagging() {
         if (data.status === 'started') {
             console.log("Tagger started...");
         } else {
-            alert("Error: " + data.message);
-            btn.disabled = false;
-            btn.innerText = '自動タグ付け実行 / Run Tagger';
+            const errorMsg = data.message || (data.detail ? JSON.stringify(data.detail) : "Unknown error");
+            alert("Error: " + errorMsg);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = '自動タグ付け実行 / Run Tagger';
+            }
         }
     } catch (e) {
         alert("Error: " + e.message);
-        btn.disabled = false;
-        btn.innerText = '自動タグ付け実行 / Run Tagger';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '自動タグ付け実行 / Run Tagger';
+        }
     }
 }
 
