@@ -102,6 +102,8 @@ class TrainingConfig(BaseModel):
     vram: str
     epochs: int
     lr: str
+    rank: int = 4
+    alpha: int = 1
     keep_unet: bool = False
     shutdown: bool = False
 
@@ -146,6 +148,8 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
         "--network_module=networks.lora_anima",
         f"--max_train_epochs={config.epochs}",
         f"--learning_rate={config.lr}",
+        f"--network_dim={config.rank}",
+        f"--network_alpha={config.alpha}",
         "--mixed_precision=bf16",
         "--gradient_checkpointing"
     ]

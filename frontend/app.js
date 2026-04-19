@@ -43,6 +43,12 @@ async function browseOutput() {
     }
 }
 
+function toggleAdvancedSettings() {
+    const isChecked = document.getElementById('enable-advanced').checked;
+    const container = document.getElementById('advanced-settings-container');
+    container.style.display = isChecked ? 'flex' : 'none';
+}
+
 async function loadGPUInfo() {
     try {
         const response = await fetch('/api/gpu-info');
@@ -390,6 +396,8 @@ async function startTraining() {
                 vram: document.getElementById('vram-mode').value,
                 epochs: parseInt(document.getElementById('epochs').value) || 10,
                 lr: document.querySelector('input[name="learning-rate"]:checked').value,
+                rank: parseInt(document.getElementById('lora-rank').value) || 4,
+                alpha: parseInt(document.getElementById('lora-alpha').value) || 1,
                 keep_unet: document.getElementById('keep-unet').checked,
                 shutdown: document.getElementById('auto-shutdown').checked
             })
@@ -522,16 +530,26 @@ function connectWebSocket() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    ['dataset-path', 'model-path', 'vae-path', 'qwen-path', 'output-dir'].forEach(id => {
+    ['dataset-path', 'model-path', 'vae-path', 'qwen-path', 'output-dir', 'lora-rank', 'lora-alpha'].forEach(id => {
         const saved = localStorage.getItem('saved_' + id);
         const el = document.getElementById(id);
         if (saved && el) el.value = saved;
+        if (el) {
+            el.addEventListener('change', (e) => {
+                localStorage.setItem('saved_' + id, e.target.value);
+            });
+        }
     });
 
-    ['keep-unet', 'auto-shutdown'].forEach(id => {
+    ['keep-unet', 'auto-shutdown', 'enable-advanced'].forEach(id => {
         const saved = localStorage.getItem('saved_' + id);
         const el = document.getElementById(id);
-        if (saved !== null && el) el.checked = saved === 'true';
+        if (saved !== null && el) {
+            el.checked = saved === 'true';
+            if (id === 'enable-advanced') {
+                toggleAdvancedSettings();
+            }
+        }
         if (el) {
             el.addEventListener('change', () => {
                 localStorage.setItem('saved_' + id, el.checked);
