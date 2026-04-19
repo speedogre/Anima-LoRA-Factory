@@ -286,7 +286,28 @@
                 </div>
                 <div class="form-group">
                     <label>学習率 / Learning Rate</label>
-                    <input type="text" id="learning-rate" value="1e-4">
+                    <div
+                        style="display: flex; flex-direction: column; gap: 0.5rem; background: rgba(255,255,255,0.02); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--glass-border);">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                            title="（サクッと学習）">
+                            <input type="radio" name="learning-rate" value="1e-4" checked
+                                style="width: auto; margin: 0;">
+                            <span>1e-4 <span
+                                    style="color: var(--text-secondary); font-size: 0.85rem;">（サクッと学習）</span></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                            title="（バランス重視）">
+                            <input type="radio" name="learning-rate" value="5e-5" style="width: auto; margin: 0;">
+                            <span>5e-5 <span
+                                    style="color: var(--text-secondary); font-size: 0.85rem;">（バランス重視）</span></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                            title="（じっくり学習、高精度）">
+                            <input type="radio" name="learning-rate" value="2e-5" style="width: auto; margin: 0;">
+                            <span>2e-5 <span
+                                    style="color: var(--text-secondary); font-size: 0.85rem;">（じっくり学習、高精度）</span></span>
+                        </label>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>VRAM節約モード / VRAM Optimization</label>

@@ -389,7 +389,7 @@ async function startTraining() {
                 name: document.getElementById('output-name').value,
                 vram: document.getElementById('vram-mode').value,
                 epochs: parseInt(document.getElementById('epochs').value) || 10,
-                lr: document.getElementById('learning-rate').value,
+                lr: document.querySelector('input[name="learning-rate"]:checked').value,
                 keep_unet: document.getElementById('keep-unet').checked,
                 shutdown: document.getElementById('auto-shutdown').checked
             })
