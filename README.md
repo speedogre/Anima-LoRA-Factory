@@ -9,6 +9,9 @@ Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を
 ▼SDXLバージョンも公開しています。SDXL version is also available.<br>
 [https://github.com/UNfukashigi/SDXL-LoRA-Factory](https://github.com/UNfukashigi/SDXL-LoRA-Factory)
 
+▼詳しい使い方については、以下の記事をご覧ください。
+[https://x.com/UNfukashigi/status/2045744319433490449](https://x.com/UNfukashigi/status/2045744319433490449)
+
 ## 🌟 主な機能 / Key Features
 ### ✅全自動環境構築 / Auto Setup
 start.bat を実行するだけで、必要な学習エンジン (sd-scripts) やハードウェアに最適な PyTorch を自動的にセットアップします。
