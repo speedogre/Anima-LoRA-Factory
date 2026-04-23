@@ -1,7 +1,7 @@
 [[datasets]]
 
 [[datasets.subsets]]
-image_dir = "C:/Users/speed/Desktop/abe"
+image_dir = "Z:/kohya_lora/training/7_rikopin1/7_rikopin1"
 num_repeats = 10
 
 [general]

@@ -23,6 +23,13 @@ def check_sd_scripts():
         print("[SETUP] sd-scripts cloned successfully.")
     else:
         print("[INFO] sd-scripts found.")
+    
+    # Ensure dependencies from sd-scripts are also installed
+    req_path = os.path.join(sd_scripts_path, "requirements.txt")
+    if os.path.exists(req_path):
+        print("[SETUP] Installing sd-scripts dependencies...")
+        run_command(f"python -m pip install -r \"{req_path}\"")
+        
     return True
 
 def check_pytorch():
