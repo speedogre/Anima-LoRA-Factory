@@ -28,7 +28,8 @@ def check_sd_scripts():
     req_path = os.path.join(sd_scripts_path, "requirements.txt")
     if os.path.exists(req_path):
         print("[SETUP] Installing sd-scripts dependencies...")
-        run_command(f"python -m pip install -r \"{req_path}\"")
+        # We must run this inside the sd-scripts directory because of '.' or '-e .' in requirements.txt
+        run_command(f"python -m pip install -r \"requirements.txt\"", cwd=sd_scripts_path)
         
     return True
 
