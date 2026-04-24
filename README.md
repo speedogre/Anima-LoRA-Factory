@@ -12,6 +12,10 @@ Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を
 ▼詳しい使い方については、以下の記事をご覧ください。<br>
 [https://x.com/UNfukashigi/status/2045744319433490449](https://x.com/UNfukashigi/status/2045744319433490449)
 
+<code>4/25 更新（Updated）<br>
+・venv環境をツール内に構築する設計にしました。グローバル環境に影響を与えず、より安心してご利用頂けます。- The design now incorporates a venv environment within the tool. This ensures that it does not affect the global environment and can be used with greater peace of mind.<br>
+・より安定して使えるようにモジュールチェック機能を強化し、自動インストールの機能も強化しました。- The module check function has been enhanced for greater stability, and the automatic installation function has also been improved.</code>
+
 ## 🌟 主な機能 / Key Features
 ### ✅全自動環境構築 / Auto Setup
 start.bat を実行するだけで、必要な学習エンジン (sd-scripts) やハードウェアに最適な PyTorch を自動的にセットアップします。
