@@ -4,6 +4,15 @@ cd /d %~dp0
 
 echo [Anima LoRA Factory] Initializing...
 
+:: Create virtual environment if it doesn't exist
+if not exist venv\ (
+    echo [INFO] Creating virtual environment venv...
+    python -m venv venv
+)
+
+:: Activate virtual environment
+call venv\Scripts\activate.bat
+
 :: Run setup check
 python backend/setup_check.py
 if %ERRORLEVEL% NEQ 0 (

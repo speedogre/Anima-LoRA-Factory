@@ -130,6 +130,14 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
         await broadcast_log(msg, "train")
         return {"status": "error", "message": "Script not found"}
 
+    # Validate required Anima parameters
+    if not config.model:
+        return {"status": "error", "message": "ベースモデルのパス(Base Model Path)が指定されていません。"}
+    if not config.vae:
+        return {"status": "error", "message": "VAEのパスが指定されていません。Animaの学習には専用のVAEが必要です。"}
+    if not config.qwen3:
+        return {"status": "error", "message": "Qwen3テキストエンコーダーのパスが指定されていません。Animaの学習にはQwen3が必要です。"}
+
     # Generate dataset TOML
     toml_path = os.path.join(os.getcwd(), "dataset_config.toml")
     try:
@@ -321,7 +329,7 @@ async def setup_scripts_task(internal_scripts: str):
     import sys
     try:
         if not os.path.exists(internal_scripts):
-            await broadcast_log("Cloning sd-scripts repository...\n", "train")
+            await broadcast_log("sd-scriptsが見つかりません。リポジトリをCloneしています...\n", "train")
             process = subprocess.Popen(
                 ["git", "clone", "https://github.com/kohya-ss/sd-scripts.git", internal_scripts],
                 stdout=subprocess.PIPE,
@@ -332,6 +340,28 @@ async def setup_scripts_task(internal_scripts: str):
             if process.returncode != 0:
                 await broadcast_log("Clone failed.\n", "train")
                 return
+        else:
+            await broadcast_log("sd-scriptsが見つかりました。削除されたファイルを復元中...\n", "train")
+            restore_process = subprocess.Popen(
+                ["git", "restore", "."],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                cwd=internal_scripts
+            )
+            await run_and_capture(restore_process, "train")
+
+            await broadcast_log("git pullで最新版に更新しています...\n", "train")
+            pull_process = subprocess.Popen(
+                ["git", "pull"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                cwd=internal_scripts
+            )
+            await run_and_capture(pull_process, "train")
+            if pull_process.returncode != 0:
+                await broadcast_log("[WARNING] git pull failed. Continuing with existing files.\n", "train")
         
         await broadcast_log("Installing dependencies from requirements.txt...\n", "train")
         req_path = os.path.join(internal_scripts, "requirements.txt")

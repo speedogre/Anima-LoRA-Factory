@@ -29,7 +29,7 @@ async function browseFile(inputId, titleStr) {
     if (data.path) {
         const input = document.getElementById(inputId);
         input.value = data.path;
-        localStorage.setItem(`saved_${inputId}`, data.path);
+        localStorage.setItem(`anima_factory_${inputId}`, data.path);
     }
 }
 
@@ -39,7 +39,7 @@ async function browseOutput() {
     if (data.path) {
         const input = document.getElementById('output-dir');
         input.value = data.path;
-        localStorage.setItem('savedOutputDir', data.path);
+        localStorage.setItem('anima_factory_OutputDir', data.path);
     }
 }
 
@@ -90,15 +90,25 @@ async function setupScripts() {
         const data = await response.json();
         if (data.status === 'started' || data.status === 'exists') {
             // Poll for completion
+            let attempts = 0;
+            const maxAttempts = 30; // 30 * 3s = 90 seconds timeout
             const interval = setInterval(async () => {
+                attempts++;
                 const checkRes = await fetch('/api/check-scripts');
                 const checkData = await checkRes.json();
+                
                 if (checkData.exists) {
                     clearInterval(interval);
                     btn.innerText = '✅ 取得完了！ (Success)';
                     if (progressText) progressText.innerText = '✅ セットアップが完了しました。 / Setup completed successfully.';
                     checkScriptsStatus(); // Update button UI
                     alert('エンジンの自動取得が完了しました！ / Engine setup completed!');
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    btn.disabled = false;
+                    btn.innerText = '❌ タイムアウト (Timeout)';
+                    if (progressText) progressText.innerText = '❌ 取得に時間がかかりすぎています。コンソールを確認してください。';
+                    alert('エンジンの確認がタイムアウトしました。');
                 }
             }, 3000);
         } else {
@@ -121,14 +131,14 @@ window.addEventListener('DOMContentLoaded', () => {
     loadGPUInfo();
     
     // Load saved paths
-    const savedModel = localStorage.getItem('savedModelPath');
-    const savedOutput = localStorage.getItem('savedOutputDir');
+    const savedModel = localStorage.getItem('anima_factory_ModelPath');
+    const savedOutput = localStorage.getItem('anima_factory_OutputDir');
     if (savedModel) document.getElementById('model-path').value = savedModel;
     if (savedOutput) document.getElementById('output-dir').value = savedOutput;
 
     // Add event listeners to save on manual typing
-    document.getElementById('model-path')?.addEventListener('change', (e) => localStorage.setItem('savedModelPath', e.target.value));
-    document.getElementById('output-dir')?.addEventListener('change', (e) => localStorage.setItem('savedOutputDir', e.target.value));
+    document.getElementById('model-path')?.addEventListener('change', (e) => localStorage.setItem('anima_factory_ModelPath', e.target.value));
+    document.getElementById('output-dir')?.addEventListener('change', (e) => localStorage.setItem('anima_factory_OutputDir', e.target.value));
 });
 
 function validatePath() {
@@ -531,18 +541,18 @@ function connectWebSocket() {
 
 document.addEventListener('DOMContentLoaded', () => {
     ['dataset-path', 'model-path', 'vae-path', 'qwen-path', 'output-dir', 'lora-rank', 'lora-alpha'].forEach(id => {
-        const saved = localStorage.getItem('saved_' + id);
+        const saved = localStorage.getItem('anima_factory_' + id);
         const el = document.getElementById(id);
         if (saved && el) el.value = saved;
         if (el) {
             el.addEventListener('change', (e) => {
-                localStorage.setItem('saved_' + id, e.target.value);
+                localStorage.setItem('anima_factory_' + id, e.target.value);
             });
         }
     });
 
     ['keep-unet', 'auto-shutdown', 'enable-advanced'].forEach(id => {
-        const saved = localStorage.getItem('saved_' + id);
+        const saved = localStorage.getItem('anima_factory_' + id);
         const el = document.getElementById(id);
         if (saved !== null && el) {
             el.checked = saved === 'true';
@@ -552,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (el) {
             el.addEventListener('change', () => {
-                localStorage.setItem('saved_' + id, el.checked);
+                localStorage.setItem('anima_factory_' + id, el.checked);
             });
         }
     });

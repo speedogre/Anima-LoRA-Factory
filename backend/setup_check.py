@@ -13,67 +13,110 @@ def run_command(command, cwd=None):
 
 def check_sd_scripts():
     sd_scripts_path = os.path.join(os.getcwd(), "sd-scripts")
+    key_file = os.path.join(sd_scripts_path, "anima_train_network.py")
+
     if not os.path.exists(sd_scripts_path):
         print("[SETUP] sd-scripts not found. Cloning from repository...")
         if not run_command("git clone https://github.com/kohya-ss/sd-scripts.git"):
             print("[ERROR] Failed to clone sd-scripts. Please ensure git is installed and you have an internet connection.")
             return False
-        
-        # Checkout specific version if needed, or just stay on main
         print("[SETUP] sd-scripts cloned successfully.")
+    elif not os.path.exists(key_file):
+        # Folder exists but files are missing (e.g. git-managed but deleted)
+        git_dir = os.path.join(sd_scripts_path, ".git")
+        if os.path.exists(git_dir):
+            print("[SETUP] sd-scripts folder found but files are missing. Running git restore...")
+            if not run_command("git restore .", cwd=sd_scripts_path):
+                print("[WARNING] git restore failed. Please press the setup button in the browser.")
+            else:
+                print("[INFO] sd-scripts files restored successfully.")
+        else:
+            print("[WARNING] sd-scripts folder is empty and not a git repo. Please press the setup button in the browser.")
     else:
-        print("[INFO] sd-scripts found.")
+        print("[INFO] sd-scripts found and ready.")
     
-    # Ensure dependencies from sd-scripts are also installed
-    req_path = os.path.join(sd_scripts_path, "requirements.txt")
-    if os.path.exists(req_path):
-        print("[SETUP] Installing sd-scripts dependencies...")
-        # We must run this inside the sd-scripts directory because of '.' or '-e .' in requirements.txt
-        run_command(f"python -m pip install -r \"requirements.txt\"", cwd=sd_scripts_path)
-        
     return True
 
-def check_pytorch():
+def is_blackwell_gpu():
     try:
-        import torch
-        print(f"[INFO] PyTorch version: {torch.version.__version__}")
-        
-        if not torch.cuda.is_available():
-            print("[WARNING] CUDA is not available. Training will be extremely slow on CPU.")
+        output = subprocess.check_output(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"], text=True)
+        if "RTX 50" in output:
             return True
-        
-        # Blackwell check (RTX 50 series)
-        major, minor = torch.cuda.get_device_capability()
-        cc = major * 10 + minor
-        arch_list = torch.cuda.get_arch_list()
-        
-        print(f"[INFO] GPU Compute Capability: {major}.{minor}")
-        
-        if cc >= 120 and "sm_120" not in arch_list:
-            print("[SETUP] RTX 50 series detected, but current PyTorch does not support Blackwell (sm_120).")
-            print("[SETUP] Upgrading to PyTorch Nightly (CUDA 13.0)...")
-            if not run_command("python -m pip install --pre torch torchvision --upgrade --index-url https://download.pytorch.org/whl/nightly/cu130"):
-                print("[ERROR] Failed to upgrade PyTorch. Training might fail.")
+    except Exception:
+        pass
+    return False
+
+def get_pytorch_info():
+    code = """
+import sys
+try:
+    import torch
+    import torchvision
+    if not torch.cuda.is_available():
+        print("NO_CUDA")
+        sys.exit(0)
+    major, minor = torch.cuda.get_device_capability()
+    arch_list = torch.cuda.get_arch_list()
+    cc = major * 10 + minor
+    if cc >= 120 and 'sm_120' not in arch_list:
+        print("NEEDS_UPGRADE")
+    else:
+        print("OK")
+except ImportError:
+    print("MISSING")
+"""
+    try:
+        output = subprocess.check_output([sys.executable, "-c", code], text=True).strip()
+        return output.split('\n')[-1]
+    except Exception:
+        return "MISSING"
+
+def check_pytorch():
+    is_blackwell = is_blackwell_gpu()
+    status = get_pytorch_info()
+    
+    nightly_cmd = f"\"{sys.executable}\" -m pip install torch==2.13.0.dev20260418+cu130 torchvision --index-url https://download.pytorch.org/whl/nightly/cu130"
+    stable_cmd = f"\"{sys.executable}\" -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121"
+
+    if status == "MISSING":
+        if is_blackwell:
+            print("[SETUP] RTX 50 series detected. Installing PyTorch Nightly (CUDA 13.0)...")
+            if not run_command(nightly_cmd):
                 return False
-            print("[SETUP] PyTorch upgraded successfully.")
         else:
-            print("[INFO] PyTorch is compatible with your GPU.")
-            
-    except ImportError:
-        print("[SETUP] PyTorch not found. Installing standard version...")
-        if not run_command("python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121"):
+            print("[SETUP] PyTorch not found. Installing standard version...")
+            if not run_command(stable_cmd):
+                return False
+    elif status == "NEEDS_UPGRADE":
+        print("[SETUP] RTX 50 series detected, but current PyTorch does not support Blackwell (sm_120).")
+        print("[SETUP] Upgrading to PyTorch Nightly (CUDA 13.0)...")
+        if not run_command(nightly_cmd):
+            print("[ERROR] Failed to upgrade PyTorch.")
             return False
+        print("[SETUP] PyTorch upgraded successfully.")
+    elif status == "NO_CUDA":
+        print("[WARNING] CUDA is not available. Training will be extremely slow on CPU.")
+    else:
+        print("[INFO] PyTorch is compatible with your GPU.")
     
     return True
 
 def check_requirements():
     print("[INFO] Checking other dependencies...")
+    
+    # 1. Main backend requirements
     req_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
     if os.path.exists(req_path):
-        # We use --no-deps or just let pip handle it. 
-        # To make it fast/offline, we could skip if certain packages exist, 
-        # but "pip install" is usually fast if everything is already there.
-        run_command(f"python -m pip install -r \"{req_path}\"")
+        print(f"[INFO] Installing backend requirements from {req_path}...")
+        run_command(f"\"{sys.executable}\" -m pip install -r \"{req_path}\"")
+    
+    # 2. sd-scripts requirements
+    sd_scripts_path = os.path.join(os.getcwd(), "sd-scripts")
+    sd_req_path = os.path.join(sd_scripts_path, "requirements.txt")
+    if os.path.exists(sd_req_path):
+        print(f"[INFO] Installing sd-scripts requirements from {sd_req_path}...")
+        run_command(f"\"{sys.executable}\" -m pip install -r \"{sd_req_path}\"", cwd=sd_scripts_path)
+    
     return True
 
 if __name__ == "__main__":
@@ -89,11 +132,17 @@ if __name__ == "__main__":
         success = False
     
     if success and not check_pytorch():
-        # We continue anyway, but warning was shown
-        pass
+        success = False
         
     if success and not check_requirements():
         success = False
+    
+    # Final verification for Blackwell
+    if success and is_blackwell_gpu():
+        status = get_pytorch_info()
+        if status in ["NEEDS_UPGRADE", "MISSING"]:
+            print(f"[SETUP] Re-installing/Upgrading PyTorch Nightly (status: {status})...")
+            run_command(f"\"{sys.executable}\" -m pip install torch==2.13.0.dev20260418+cu130 torchvision --index-url https://download.pytorch.org/whl/nightly/cu130")
         
     if success:
         print("="*50)
