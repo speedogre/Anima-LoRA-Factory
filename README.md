@@ -14,6 +14,9 @@ Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を
 
 ---
 
+<code>4/26 更新（Updated）<br>
+・エラー報告の多かった原因として、PCのグローバル環境で環境変数PYTHONPATHが設定されている場合について、必ずvenv環境のPythonを利用するように更新しました。- Due to a high number of error reports, we have updated the code to always use the Python environment in a venv environment when the environment variable PYTHONPATH is set in the PC's global environment.</code>
+
 <code>4/25 更新（Updated）<br>
 ・venv環境をツール内に構築する設計にしました。グローバル環境に影響を与えず、より安心してご利用頂けます。- The design now incorporates a venv environment within the tool. This ensures that it does not affect the global environment and can be used with greater peace of mind.<br>
 ・より安定して使えるようにモジュールチェック機能を強化し、自動インストールの機能も強化しました。- The module check function has been enhanced for greater stability, and the automatic installation function has also been improved.
