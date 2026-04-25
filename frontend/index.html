@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anima LoRA Factory</title>
+    <title>SDXL LoRA Factory</title>
     <link rel="icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css?v=2.0">
 </head>
@@ -12,7 +12,7 @@
 <body>
     <aside class="sidebar">
         <div>
-            <h1>Anima LoRA Factory</h1>
+            <h1>SDXL LoRA Factory</h1>
             <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0.2rem 0;">
                 Created by <a href="https://fukachan.jp/" target="_blank"
                     style="color: var(--accent-blue); text-decoration: none; font-weight: 600;">fukachan.jp</a>
@@ -90,7 +90,7 @@
                 </div>
                 <div class="hint-box">
                     <strong>💡 解像度について (Resolution):</strong><br>
-                    Animaモデルは1024x1024前後での学習を推奨しています。アスペクト比はバラバラでも自動調整されます。<br>
+                    SDXLモデルは1024x1024前後での学習を推奨しています。アスペクト比はバラバラでも自動調整されます。<br>
                     <span class="lang-en"
                         style="display: block; color: var(--text-secondary); margin-top: 0.5rem; font-style: italic;">Resolution:
                         1024x1024 is recommended. Various aspect ratios are supported via buckets.</span>
@@ -140,7 +140,7 @@
                         <datalist id="tag-suggestions"></datalist>
                     </div>
                     <button class="btn btn-secondary"
-                        style="background: rgba(96, 165, 250, 0.1); border: 1px solid #60a5fa; color: #60a5fa;"
+                        style="background: rgba(249, 115, 22, 0.1); border: 1px solid var(--accent-orange); color: var(--accent-orange);"
                         onclick="batchAddTags()">一括追加 / Add</button>
                     <button class="btn btn-secondary"
                         style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;"
@@ -237,9 +237,10 @@
 
             <div class="card">
                 <div class="form-group">
-                    <label>Animaベースモデルのパス / Anima Base Model Path (.safetensors)</label>
+                <div class="form-group">
+                    <label>SDXLベースモデルのパス / SDXL Base Model Path (.safetensors)</label>
                     <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="model-path" placeholder="C:\path\to\anima-preview3-base.safetensors">
+                        <input type="text" id="model-path" placeholder="C:\path\to\sdxl_base.safetensors">
                         <button class="btn btn-secondary"
                             style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: white;"
                             onclick="browseFile('model-path', 'Select Base Model')">参照 / Browse</button>
@@ -248,19 +249,10 @@
                 <div class="form-group">
                     <label>VAEのパス / VAE Path (.safetensors)</label>
                     <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="vae-path" placeholder="C:\path\to\anima-preview3-vae.safetensors">
+                        <input type="text" id="vae-path" placeholder="C:\path\to\sdxl_vae.safetensors">
                         <button class="btn btn-secondary"
                             style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: white;"
                             onclick="browseFile('vae-path', 'Select VAE')">参照 / Browse</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Qwen3テキストエンコーダーのパス / Qwen3 Text Encoder Path</label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="qwen-path" placeholder="C:\path\to\qwen3_06b_anima.safetensors">
-                        <button class="btn btn-secondary"
-                            style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: white;"
-                            onclick="browseFile('qwen-path', 'Select Qwen3')">参照 / Browse</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -274,7 +266,7 @@
                 </div>
                 <div class="form-group">
                     <label>LoRA名称 / Output Name</label>
-                    <input type="text" id="output-name" value="my_anima_lora">
+                    <input type="text" id="output-name" value="my_sdxl_lora">
                 </div>
                 <div class="form-group">
                     <label>学習回数 / Epochs</label>
@@ -316,13 +308,14 @@
                     <select id="vram-mode">
                         <option value="high">高画質 / High Quality (VRAM 24GB+)</option>
                         <option value="balanced" selected>バランス / Balanced (VRAM 12-16GB)</option>
-                        <option value="low">低容量 / Low VRAM (VRAM 8GB+)</option>
+                        <option value="low">低容量 / Low VRAM (VRAM 8-12GB)</option>
+                        <option value="very_low">超低容量 / Very Low VRAM (VRAM 8GB未満)</option>
                     </select>
                 </div>
                 <div class="hint-box">
-                    <strong>💡 初心者へのアドバイス / Advice:</strong><br>
-                    基本的には「バランス」設定で問題ありません。エラーが出る場合は「低容量」を試してください。<br>
-                    (Balanced is usually fine. If you get errors, try Low VRAM mode.)
+                    <strong>💡 VRAM設定の目安 / VRAM Guide:</strong><br>
+                    基本的には「バランス」設定で問題ありません。メモリ不足エラーが出る場合は「低容量」→「超低容量」の順で試してください。<br>
+                    (Use Balanced normally. If you get OOM/CUDA errors, try Low → Very Low VRAM mode.)
                 </div>
 
                 <div class="form-group"
@@ -366,11 +359,6 @@
 
                     <div
                         style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 0.6rem;">
-                        <label
-                            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; user-select: none;">
-                            <input type="checkbox" id="keep-unet" style="width: auto;">
-                            <span>UNET版モデル（中間ファイル）を削除せずに残す / Keep UNET file</span>
-                        </label>
                         <label
                             style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; user-select: none;">
                             <input type="checkbox" id="auto-shutdown" style="width: auto;">

@@ -13,7 +13,7 @@ def run_command(command, cwd=None):
 
 def check_sd_scripts():
     sd_scripts_path = os.path.join(os.getcwd(), "sd-scripts")
-    key_file = os.path.join(sd_scripts_path, "anima_train_network.py")
+    key_file = os.path.join(sd_scripts_path, "sdxl_train_network.py")
 
     if not os.path.exists(sd_scripts_path):
         print("[SETUP] sd-scripts not found. Cloning from repository...")
@@ -55,7 +55,6 @@ try:
     major, minor = torch.cuda.get_device_capability()
     arch_list = torch.cuda.get_arch_list()
     cc = major * 10 + minor
-    # Check if we have Blackwell (sm_120) support
     if cc >= 120 and 'sm_120' not in arch_list:
         print("NEEDS_UPGRADE")
     else:
@@ -120,7 +119,7 @@ def check_requirements():
 
 if __name__ == "__main__":
     print("="*50)
-    print("  Anima LoRA Factory - Environment Setup Check")
+    print("  SDXL LoRA Factory - Environment Setup Check")
     print("="*50)
     
     success = True
@@ -130,7 +129,7 @@ if __name__ == "__main__":
     if success and not check_pytorch(): success = False
     if success and not check_requirements(): success = False
     
-    # Final check for Blackwell/NVIDIA to prevent downgrade
+    # Final check for Blackwell/NVIDIA
     if success:
         gpu_name = get_nvidia_gpu_info()
         if gpu_name:
