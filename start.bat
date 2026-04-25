@@ -10,11 +10,11 @@ if not exist venv\ (
     python -m venv venv
 )
 
-:: Activate virtual environment
-call venv\Scripts\activate.bat
+:: Set absolute path to venv python to prevent global Python interference
+set VENV_PYTHON=%~dp0venv\Scripts\python.exe
 
-:: Run setup check
-python backend/setup_check.py
+:: Run setup check using the explicit venv python
+"%VENV_PYTHON%" backend/setup_check.py
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo [ERROR] Setup check failed. Please check the messages above.
@@ -30,8 +30,8 @@ echo.
 :: Start browser
 start http://localhost:8000
 
-:: Run backend
+:: Run backend using the explicit venv python
 cd backend
-python main.py
+"%VENV_PYTHON%" main.py
 
 pause

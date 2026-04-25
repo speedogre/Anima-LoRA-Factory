@@ -148,7 +148,7 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
 
     # In a real scenario, we would run sd-scripts
     command = [
-        "python", train_script,
+        sys.executable, train_script,
         f"--pretrained_model_name_or_path={config.model}",
         f"--output_dir={config.output_dir}",
         f"--output_name={config.name}",
@@ -216,7 +216,7 @@ async def train_and_convert_task(config: TrainingConfig, command: list, script_p
              await broadcast_log(f"Error: Conversion script not found at {convert_script}\n", "train")
              return
 
-        conv_command = ["python", convert_script, src_path, dst_path]
+        conv_command = [sys.executable, convert_script, src_path, dst_path]
         
         conv_process = subprocess.Popen(
             conv_command,
@@ -456,7 +456,7 @@ async def run_tagger(config: TaggerConfig):
     tagger_script = os.path.join(os.path.dirname(__file__), "bundled_tagger.py")
 
     command = [
-        "python", tagger_script,
+        sys.executable, tagger_script,
         f"--train_data_dir={config.path}"
     ]
     
@@ -484,7 +484,7 @@ async def convert_to_comfy(config: TrainingConfig):
         return {"status": "error", "message": f"Source file not found: {src_path}"}
         
     command = [
-        "python", "networks/convert_anima_lora_to_comfy.py",
+        sys.executable, "networks/convert_anima_lora_to_comfy.py",
         src_path,
         dst_path
     ]
