@@ -13,7 +13,7 @@ def run_command(command, cwd=None):
 
 def check_sd_scripts():
     sd_scripts_path = os.path.join(os.getcwd(), "sd-scripts")
-    key_file = os.path.join(sd_scripts_path, "sdxl_train_network.py")
+    key_file = os.path.join(sd_scripts_path, "anima_train_network.py")
 
     if not os.path.exists(sd_scripts_path):
         print("[SETUP] sd-scripts not found. Cloning from repository...")
@@ -55,6 +55,7 @@ try:
     major, minor = torch.cuda.get_device_capability()
     arch_list = torch.cuda.get_arch_list()
     cc = major * 10 + minor
+    # Check if we have Blackwell (sm_120) support
     if cc >= 120 and 'sm_120' not in arch_list:
         print("NEEDS_UPGRADE")
     else:
@@ -75,7 +76,7 @@ def check_pytorch():
     
     status = get_pytorch_info()
     
-    nightly_cmd = f"\"{sys.executable}\" -m pip install torch==2.13.0.dev20260418+cu130 torchvision --index-url https://download.pytorch.org/whl/nightly/cu130"
+    nightly_cmd = f"\"{sys.executable}\" -m pip install torch==2.13.0.dev20260418+cu130 torchvision==0.27.0.dev20260418+cu130 --index-url https://download.pytorch.org/whl/nightly/cu130"
     stable_cmd = f"\"{sys.executable}\" -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121"
 
     needs_install = False
@@ -119,7 +120,7 @@ def check_requirements():
 
 if __name__ == "__main__":
     print("="*50)
-    print("  SDXL LoRA Factory - Environment Setup Check")
+    print("  Anima LoRA Factory - Environment Setup Check")
     print("="*50)
     
     success = True
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     if success and not check_pytorch(): success = False
     if success and not check_requirements(): success = False
     
-    # Final check for Blackwell/NVIDIA
+    # Final check for Blackwell/NVIDIA to prevent downgrade
     if success:
         gpu_name = get_nvidia_gpu_info()
         if gpu_name:
@@ -137,7 +138,7 @@ if __name__ == "__main__":
             if status in ["NEEDS_UPGRADE", "NO_CUDA", "MISSING"]:
                 print(f"[SETUP] Final verification failed (status: {status}). Re-fixing PyTorch...")
                 if "RTX 50" in gpu_name:
-                    run_command(f"\"{sys.executable}\" -m pip install torch==2.13.0.dev20260418+cu130 torchvision --index-url https://download.pytorch.org/whl/nightly/cu130")
+                    run_command(f"\"{sys.executable}\" -m pip install torch==2.13.0.dev20260418+cu130 torchvision==0.27.0.dev20260418+cu130 --index-url https://download.pytorch.org/whl/nightly/cu130")
                 else:
                     run_command(f"\"{sys.executable}\" -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121")
         

@@ -1,4 +1,3 @@
-import sys
 import os
 import subprocess
 import threading
@@ -97,6 +96,7 @@ class TrainingConfig(BaseModel):
     path: str
     model: str
     vae: str = ""
+    qwen3: str = ""
     output_dir: str
     name: str
     vram: str
@@ -118,7 +118,7 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
     
     # Check script path
     internal_scripts = os.path.join(os.path.dirname(__file__), "sd-scripts")
-    train_script_name = "sdxl_train_network.py"
+    train_script_name = "anima_train_network.py"
     
     if not script_path and os.path.exists(internal_scripts):
         script_path = internal_scripts
@@ -130,8 +130,16 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
         await broadcast_log(msg, "train")
         return {"status": "error", "message": "Script not found"}
 
+    # Validate required Anima parameters
+    if not config.model:
+        return {"status": "error", "message": "ベースモデルのパス(Base Model Path)が指定されていません。"}
+    if not config.vae:
+        return {"status": "error", "message": "VAEのパスが指定されていません。Animaの学習には専用のVAEが必要です。"}
+    if not config.qwen3:
+        return {"status": "error", "message": "Qwen3テキストエンコーダーのパスが指定されていません。Animaの学習にはQwen3が必要です。"}
+
     # Generate dataset TOML
-    toml_path = os.path.join(os.path.dirname(__file__), "dataset_config.toml")
+    toml_path = os.path.join(os.getcwd(), "dataset_config.toml")
     try:
         generate_dataset_toml(config.path, toml_path)
         training_logs += f"Generated dataset config at {toml_path}\n"
@@ -145,7 +153,7 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
         f"--output_dir={config.output_dir}",
         f"--output_name={config.name}",
         f"--dataset_config={toml_path}",
-        "--network_module=networks.lora",
+        "--network_module=networks.lora_anima",
         f"--max_train_epochs={config.epochs}",
         f"--learning_rate={config.lr}",
         f"--network_dim={config.rank}",
@@ -156,20 +164,19 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
     
     if config.vae:
         command.append(f"--vae={config.vae}")
+    if config.qwen3:
+        command.append(f"--qwen3={config.qwen3}")
     
-    # Common optimizations
-    command.append("--sdpa")
-    command.append("--cache_latents")
-
-    # Add VRAM optimizations based on selected mode
+    # Add VRAM optimizations
     if config.vram == "low":
-        command.append("--lowram")
-        command.append("--cache_latents_to_disk")
-    elif config.vram == "very_low":
-        command.append("--lowram")
-        command.append("--cache_latents_to_disk")
-        command.append("--cache_text_encoder_outputs")
-        command.append("--cache_text_encoder_outputs_to_disk")
+        command.append("--blocks_to_swap=20")
+    elif config.vram == "balanced":
+        command.append("--blocks_to_swap=10")
+
+    # Update output name to include _unet suffix
+    for i, arg in enumerate(command):
+        if arg.startswith("--output_name="):
+            command[i] = f"--output_name={config.name}_unet"
 
     training_logs = f"Running command: {' '.join(command)}\n"
     
@@ -183,6 +190,7 @@ async def start_training(config: TrainingConfig, script_path: str = ""):
 async def train_and_convert_task(config: TrainingConfig, command: list, script_path: str):
     global training_process
     try:
+        # 1. Run Training
         training_process = subprocess.Popen(
             command, 
             stdout=subprocess.PIPE, 
@@ -194,10 +202,39 @@ async def train_and_convert_task(config: TrainingConfig, command: list, script_p
         await run_and_capture(training_process, "train")
         
         if training_process.returncode != 0:
-            await broadcast_log("Training failed.\n", "train")
+            await broadcast_log("Training failed. Skipping conversion.\n", "train")
             return
+
+        # 2. Run Conversion
+        await broadcast_log("\n--- Starting Conversion to ComfyUI ---\n", "train")
         
-        await broadcast_log("\n--- Training Finished Successfully ---\n", "train")
+        src_path = os.path.join(config.output_dir, f"{config.name}_unet.safetensors")
+        dst_path = os.path.join(config.output_dir, f"{config.name}_comfy.safetensors")
+        
+        convert_script = os.path.join(script_path, "networks", "convert_anima_lora_to_comfy.py")
+        if not os.path.exists(convert_script):
+             await broadcast_log(f"Error: Conversion script not found at {convert_script}\n", "train")
+             return
+
+        conv_command = [sys.executable, convert_script, src_path, dst_path]
+        
+        conv_process = subprocess.Popen(
+            conv_command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace"
+        )
+        await run_and_capture(conv_process, "train")
+        
+        # 3. Cleanup
+        if not config.keep_unet:
+            await broadcast_log(f"Cleaning up temporary UNET file: {os.path.basename(src_path)}\n", "train")
+            if os.path.exists(src_path):
+                os.remove(src_path)
+        
+        await broadcast_log("\n--- All Processes Finished Successfully ---\n", "train")
         
         if config.shutdown:
             await broadcast_log("\n⚠️ シャットダウン命令を受信しました。60秒後にPCをシャットダウンします。\n", "train")
@@ -217,12 +254,6 @@ async def run_and_capture(process, type):
         # Filter out noisy but harmless warnings
         if "triton not found" in line or "not compatible with the current PyTorch installation" in line:
             continue
-
-        # Detect missing dependencies
-        if "ModuleNotFoundError" in line:
-            missing_module = line.split("named")[-1].strip().replace("'", "")
-            advice = f"\n[ADVICE] ライブラリ '{missing_module}' が不足しているようです。\n[ADVICE] 「学習エンジンの自動取得 / Setup Training Engine」ボタンをクリックして、セットアップをやり直してください。\n"
-            await broadcast_log(advice, type)
             
         await broadcast_log(line, type)
     process.wait()
@@ -277,7 +308,7 @@ async def get_gpu_info():
 @app.get("/api/check-scripts")
 async def check_scripts():
     internal_scripts = os.path.join(os.path.dirname(__file__), "sd-scripts")
-    exists = os.path.exists(os.path.join(internal_scripts, "sdxl_train_network.py"))
+    exists = os.path.exists(os.path.join(internal_scripts, "anima_train_network.py"))
     return {"exists": exists, "path": internal_scripts if exists else ""}
 
 @app.post("/api/setup-scripts")
@@ -297,26 +328,65 @@ async def setup_scripts():
 async def setup_scripts_task(internal_scripts: str):
     import sys
     try:
-        setup_script = os.path.join(os.path.dirname(__file__), "setup_check.py")
-        if not os.path.exists(setup_script):
-            await broadcast_log(f"Error: {setup_script} not found.\n", "train")
-            return
+        if not os.path.exists(internal_scripts):
+            await broadcast_log("sd-scriptsが見つかりません。リポジトリをCloneしています...\n", "train")
+            process = subprocess.Popen(
+                ["git", "clone", "https://github.com/kohya-ss/sd-scripts.git", internal_scripts],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
+            await run_and_capture(process, "train")
+            if process.returncode != 0:
+                await broadcast_log("Clone failed.\n", "train")
+                return
+        else:
+            await broadcast_log("sd-scriptsが見つかりました。削除されたファイルを復元中...\n", "train")
+            restore_process = subprocess.Popen(
+                ["git", "restore", "."],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                cwd=internal_scripts
+            )
+            await run_and_capture(restore_process, "train")
 
-        process = subprocess.Popen(
-            [sys.executable, setup_script],
+            await broadcast_log("git pullで最新版に更新しています...\n", "train")
+            pull_process = subprocess.Popen(
+                ["git", "pull"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                cwd=internal_scripts
+            )
+            await run_and_capture(pull_process, "train")
+            if pull_process.returncode != 0:
+                await broadcast_log("[WARNING] git pull failed. Continuing with existing files.\n", "train")
+        
+        await broadcast_log("Installing dependencies from requirements.txt...\n", "train")
+        req_path = os.path.join(internal_scripts, "requirements.txt")
+        if os.path.exists(req_path):
+            pip_process = subprocess.Popen(
+                [sys.executable, "-m", "pip", "install", "-r", req_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
+            await run_and_capture(pip_process, "train")
+        else:
+            await broadcast_log("requirements.txt not found.\n", "train")
+
+        # Additional vital packages
+        await broadcast_log("Installing core training packages (accelerate, diffusers, etc.)...\n", "train")
+        core_process = subprocess.Popen(
+            [sys.executable, "-m", "pip", "install", "accelerate", "diffusers", "transformers", "ftfy", "albumentations"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace"
+            text=True
         )
-        await run_and_capture(process, "train")
+        await run_and_capture(core_process, "train")
         
-        if process.returncode == 0:
-            await broadcast_log("\n--- Setup Fully Completed ---\n", "train")
-        else:
-            await broadcast_log("\n--- Setup Failed. Check logs above. ---\n", "train")
-            
+        await broadcast_log("\n--- Setup Fully Completed ---\n", "train")
     except Exception as e:
         await broadcast_log(f"Setup Error: {str(e)}\n", "train")
 
@@ -404,13 +474,45 @@ async def run_tagger(config: TaggerConfig):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.post("/api/convert-to-comfy")
+async def convert_to_comfy(config: TrainingConfig):
+    # Source file is in the specified output_dir
+    src_path = os.path.join(config.output_dir, f"{config.name}.safetensors")
+    dst_path = os.path.join(config.output_dir, f"{config.name}_comfy.safetensors")
+    
+    if not os.path.exists(src_path):
+        return {"status": "error", "message": f"Source file not found: {src_path}"}
+        
+    command = [
+        sys.executable, "networks/convert_anima_lora_to_comfy.py",
+        src_path,
+        dst_path
+    ]
+    
+    try:
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace"
+        )
+        asyncio.create_task(run_and_capture(process, "convert"))
+        return {"status": "started", "output": dst_path}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
-
-# capture_logs() was removed (dead code - superseded by run_and_capture() with WebSocket broadcast)
+def capture_logs(process):
+    global training_logs
+    for line in iter(process.stdout.readline, ""):
+        training_logs += line
+        if len(training_logs) > 10000: # Limit log size
+            training_logs = training_logs[-10000:]
 
 # Serve frontend
 app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

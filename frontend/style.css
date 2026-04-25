@@ -1,15 +1,13 @@
 :root {
-    --bg-color: #1e1e1e;
-    --card-bg: rgba(45, 45, 45, 0.6);
-    --primary-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    --secondary-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    --bg-color: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
-    --accent-orange: #f97316;
-    --accent-warm: #ea580c;
-    --accent-blue: #f97316; /* For compatibility with inline styles */
-    --accent-purple: #ea580c; /* For compatibility with inline styles */
-    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent-purple: #c084fc;
+    --accent-blue: #60a5fa;
+    --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 * {
@@ -22,8 +20,8 @@
 body {
     background-color: var(--bg-color);
     background-image: 
-        radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.08) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
@@ -32,7 +30,7 @@ body {
 /* Layout */
 .sidebar {
     width: 260px;
-    background: rgba(18, 18, 18, 0.95);
+    background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(10px);
     border-right: 1px solid var(--glass-border);
     padding: 2rem 1.5rem;
@@ -60,11 +58,6 @@ h1 {
 h2 {
     font-size: 1.25rem;
     margin-bottom: 1.5rem;
-    color: var(--accent-orange);
-}
-
-h3 {
-    color: var(--accent-warm);
 }
 
 /* Cards */
@@ -102,7 +95,7 @@ h3 {
 }
 
 .nav-item.active {
-    border-left: 3px solid var(--accent-orange);
+    border-left: 3px solid #6366f1;
 }
 
 .step-chip {
@@ -117,7 +110,7 @@ h3 {
 }
 
 .nav-item.active .step-chip {
-    background: var(--accent-orange);
+    background: #6366f1;
     color: white;
 }
 
@@ -142,8 +135,8 @@ h3 {
 
 /* Material Hints */
 .hint-box {
-    background: rgba(249, 115, 22, 0.05);
-    border-left: 4px solid var(--accent-orange);
+    background: rgba(96, 165, 250, 0.1);
+    border-left: 4px solid var(--accent-blue);
     padding: 1rem;
     border-radius: 0 0.5rem 0.5rem 0;
     margin: 1rem 0;
@@ -172,7 +165,7 @@ label {
 
 input[type="text"], input[type="number"], select {
     width: 100%;
-    background: rgba(30, 30, 30, 0.5);
+    background: rgba(15, 23, 42, 0.5);
     border: 1px solid var(--glass-border);
     border-radius: 0.5rem;
     padding: 0.75rem 1rem;
@@ -181,7 +174,7 @@ input[type="text"], input[type="number"], select {
 }
 
 input:focus {
-    border-color: var(--accent-orange);
+    border-color: #6366f1;
 }
 
 /* Language Toggle */

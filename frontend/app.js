@@ -29,7 +29,7 @@ async function browseFile(inputId, titleStr) {
     if (data.path) {
         const input = document.getElementById(inputId);
         input.value = data.path;
-        localStorage.setItem(`sdxl_factory_saved_${inputId}`, data.path);
+        localStorage.setItem(`anima_factory_${inputId}`, data.path);
     }
 }
 
@@ -39,7 +39,7 @@ async function browseOutput() {
     if (data.path) {
         const input = document.getElementById('output-dir');
         input.value = data.path;
-        localStorage.setItem('sdxl_factory_savedOutputDir', data.path);
+        localStorage.setItem('anima_factory_OutputDir', data.path);
     }
 }
 
@@ -131,14 +131,14 @@ window.addEventListener('DOMContentLoaded', () => {
     loadGPUInfo();
     
     // Load saved paths
-    const savedModel = localStorage.getItem('sdxl_factory_savedModelPath');
-    const savedOutput = localStorage.getItem('sdxl_factory_savedOutputDir');
+    const savedModel = localStorage.getItem('anima_factory_ModelPath');
+    const savedOutput = localStorage.getItem('anima_factory_OutputDir');
     if (savedModel) document.getElementById('model-path').value = savedModel;
     if (savedOutput) document.getElementById('output-dir').value = savedOutput;
 
     // Add event listeners to save on manual typing
-    document.getElementById('model-path')?.addEventListener('change', (e) => localStorage.setItem('sdxl_factory_savedModelPath', e.target.value));
-    document.getElementById('output-dir')?.addEventListener('change', (e) => localStorage.setItem('sdxl_factory_savedOutputDir', e.target.value));
+    document.getElementById('model-path')?.addEventListener('change', (e) => localStorage.setItem('anima_factory_ModelPath', e.target.value));
+    document.getElementById('output-dir')?.addEventListener('change', (e) => localStorage.setItem('anima_factory_OutputDir', e.target.value));
 });
 
 function validatePath() {
@@ -400,6 +400,7 @@ async function startTraining() {
                 path: document.getElementById('dataset-path').value,
                 model: document.getElementById('model-path').value,
                 vae: document.getElementById('vae-path').value,
+                qwen3: document.getElementById('qwen-path').value,
                 output_dir: document.getElementById('output-dir').value,
                 name: document.getElementById('output-name').value,
                 vram: document.getElementById('vram-mode').value,
@@ -407,6 +408,7 @@ async function startTraining() {
                 lr: document.querySelector('input[name="learning-rate"]:checked').value,
                 rank: parseInt(document.getElementById('lora-rank').value) || 4,
                 alpha: parseInt(document.getElementById('lora-alpha').value) || 1,
+                keep_unet: document.getElementById('keep-unet').checked,
                 shutdown: document.getElementById('auto-shutdown').checked
             })
         });
@@ -417,6 +419,7 @@ async function startTraining() {
             // Disable UI
             document.getElementById('start-train-btn').disabled = true;
             document.getElementById('start-train-btn').innerText = '学習準備中... / Preparing...';
+            document.getElementById('keep-unet').disabled = true;
             document.getElementById('auto-shutdown').disabled = true;
         } else {
             consoleOut.innerHTML += `<span style="color: #ef4444;">Error: ${data.message}</span>`;
@@ -426,7 +429,34 @@ async function startTraining() {
     }
 }
 
+async function convertToComfy() {
+    const consoleOut = document.getElementById('console-output');
+    consoleOut.innerHTML += '<br>ComfyUI形式への変換を開始します...<br>';
+    connectWebSocket();
 
+    try {
+        const response = await fetch('/api/convert-to-comfy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                path: document.getElementById('dataset-path').value,
+                name: document.getElementById('output-name').value,
+                vram: document.getElementById('vram-mode').value,
+                epochs: document.getElementById('epochs').value,
+                lr: document.getElementById('learning-rate').value
+            })
+        });
+        
+        const data = await response.json();
+        if (data.status === 'started') {
+            console.log("Conversion started...");
+        } else {
+            consoleOut.innerHTML += `<span style="color: #ef4444;">Error: ${data.message}</span>`;
+        }
+    } catch (e) {
+        consoleOut.innerHTML += `<span style="color: #ef4444;">Error: ${e.message}</span>`;
+    }
+}
 
 function connectWebSocket() {
     const consoleOut = document.getElementById('console-output');
@@ -462,7 +492,7 @@ function connectWebSocket() {
                     setTimeout(() => {
                         refreshDataset();
                         document.getElementById('tagger-progress-container').style.display = 'none';
-                        const btn = document.getElementById('run-tagger-btn');
+                        const btn = document.querySelector('#tab-tagger .btn-primary:last-child');
                         if (btn) {
                             btn.disabled = false;
                             btn.innerText = '自動タグ付け実行 / Run Tagger';
@@ -486,7 +516,7 @@ function connectWebSocket() {
                 }
                 
                 // Update page title
-                document.title = `(${percent}%) SDXL LoRA Factory`;
+                document.title = `(${percent}%) Anima LoRA Factory`;
             }
         }
 
@@ -496,10 +526,11 @@ function connectWebSocket() {
                 btn.disabled = false;
                 btn.innerText = '🚀 LoRA学習開始 / Start Training';
             }
+            document.getElementById('keep-unet').disabled = false;
             document.getElementById('auto-shutdown').disabled = false;
             
             // Reset title
-            document.title = "SDXL LoRA Factory";
+            document.title = "Anima LoRA Factory";
         }
     };
     
@@ -509,19 +540,19 @@ function connectWebSocket() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    ['dataset-path', 'model-path', 'vae-path', 'output-dir', 'lora-rank', 'lora-alpha'].forEach(id => {
-        const saved = localStorage.getItem('sdxl_factory_saved_' + id);
+    ['dataset-path', 'model-path', 'vae-path', 'qwen-path', 'output-dir', 'lora-rank', 'lora-alpha'].forEach(id => {
+        const saved = localStorage.getItem('anima_factory_' + id);
         const el = document.getElementById(id);
         if (saved && el) el.value = saved;
         if (el) {
             el.addEventListener('change', (e) => {
-                localStorage.setItem('sdxl_factory_saved_' + id, e.target.value);
+                localStorage.setItem('anima_factory_' + id, e.target.value);
             });
         }
     });
 
-    ['auto-shutdown', 'enable-advanced'].forEach(id => {
-        const saved = localStorage.getItem('sdxl_factory_saved_' + id);
+    ['keep-unet', 'auto-shutdown', 'enable-advanced'].forEach(id => {
+        const saved = localStorage.getItem('anima_factory_' + id);
         const el = document.getElementById(id);
         if (saved !== null && el) {
             el.checked = saved === 'true';
@@ -531,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (el) {
             el.addEventListener('change', () => {
-                localStorage.setItem('sdxl_factory_saved_' + id, el.checked);
+                localStorage.setItem('anima_factory_' + id, el.checked);
             });
         }
     });

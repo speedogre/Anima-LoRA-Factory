@@ -2,7 +2,7 @@
 setlocal
 cd /d %~dp0
 
-echo [SDXL LoRA Factory] Initializing...
+echo [Anima LoRA Factory] Initializing...
 
 :: Create virtual environment if it doesn't exist
 if not exist venv\ (
@@ -23,12 +23,12 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo [SDXL LoRA Factory] Starting backend server...
-echo Access the GUI at http://localhost:8001
+echo [Anima LoRA Factory] Starting backend server...
+echo Access the GUI at http://localhost:8000
 echo.
 
 :: Start browser
-start http://localhost:8001
+start http://localhost:8000
 
 :: Run backend using the explicit venv python
 cd backend
