@@ -25,9 +25,6 @@ Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を
 ・より安定して使えるようにモジュールチェック機能を強化し、自動インストールの機能も強化しました。- The module check function has been enhanced for greater stability, and the automatic installation function has also been improved.
 ・Anima版とSDXL版でURL（ポート番号）を分けました。キャッシュが被らないので表示も安定するはず。- I've separated the URLs (port numbers) for the Anima and SDXL versions. This should prevent cache conflicts and improve display stability.</code>
 
-<code>**【古い版から更新した場合は、起動後にキャッシュクリアして更新（Ctrl＋F5）をしてください。古いキャッシュが残っていると表示がおかしくなるかもしれません。左上がv2.0betaとなっていれば最新版です。】<br>
-If you've updated from an older version, please clear your cache and refresh (Ctrl+F5) after launching the application. Leaving old cache files may cause display issues. If the top left corner shows v2.0beta, you have the latest version.**</code>
-
 ---
 
 <code>Further modifications have been made so that the following people can also use it.
