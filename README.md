@@ -6,10 +6,13 @@ Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を
 
 > Anima LoRA Factory is a user-friendly GUI tool designed for training LoRAs for the next-generation Anima diffusion models. It simplifies the complex setup process and offers native support for the latest NVIDIA RTX 50 Series (Blackwell / sm_120) GPUs.
 
-▼SDXLバージョンも公開しています。SDXL version is also available.<br>
+▼リポジトリをダウンロードする - Download the repository<br>
+[https://github.com/UNfukashigi/Anima-LoRA-Factory/archive/refs/heads/main.zip](https://github.com/UNfukashigi/Anima-LoRA-Factory/archive/refs/heads/main.zip)
+
+▼SDXLバージョンも公開しています。- SDXL version is also available.<br>
 [https://github.com/UNfukashigi/SDXL-LoRA-Factory](https://github.com/UNfukashigi/SDXL-LoRA-Factory)
 
-▼詳しい使い方については、以下の記事をご覧ください。<br>
+▼詳しい使い方については、以下の記事をご覧ください。- For detailed instructions on how to use it, please see the article below.<br>
 [https://x.com/UNfukashigi/status/2045744319433490449](https://x.com/UNfukashigi/status/2045744319433490449)
 
 ---
