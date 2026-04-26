@@ -15,7 +15,7 @@ Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を
 ---
 
 <code>4/26 更新（Updated）**v2.2**<br>
-・エラー報告の多かった原因のsd-scriptsを同梱しました。- We've included sd-scripts, which were the cause of many error reports.</code>
+・エラー報告の多かった原因のsd-scriptsを同梱しました。ZIP形式での配布に変更。Gitは不要になりました。- We've included sd-scripts, which were the cause of many error reports.Distribution format changed to ZIP.Git is no longer needed.</code>
 
 <code>4/26 更新（Updated）**v2.1**<br>
 ・エラー報告の多かった原因として、PCのグローバル環境で環境変数PYTHONPATHが設定されている場合について、必ずvenv環境のPythonを利用するように更新しました。- Due to a high number of error reports, we have updated the code to always use the Python environment in a venv environment when the environment variable PYTHONPATH is set in the PC's global environment.</code>
