@@ -17,6 +17,9 @@ Anima LoRA Factory は、次世代画像生成モデル Anima の LoRA 学習を
 
 ---
 
+<code>5/2 更新（Updated）**v2.3**<br>
+・英語と日本語以外の環境でエラーが発生する問題を修正しました。英語か日本語の環境であれば2.2でも問題なく利用可能です。中国語などほかの言語をご利用の場合は2.3をご利用ください。- We have fixed an issue where errors occurred in environments other than English and Japanese. Version 2.2 should work without problems in English or Japanese environments. For other languages ​​such as Chinese, please use version 2.3.</code>
+
 <code>4/26 更新（Updated）**v2.2**<br>
 ・エラー報告の多かった原因のsd-scriptsを同梱しました。ZIP形式での配布に変更。Gitは不要になりました。- We've included sd-scripts, which were the cause of many error reports.Distribution format changed to ZIP.Git is no longer needed.</code>
 
